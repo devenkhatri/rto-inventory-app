@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline Inventory | Kumud Creations</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #111;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .search-bar {
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            background: #f5f5f5;
+            padding-bottom: 15px;
+            z-index: 10;
+        }
+
+        #search {
+            width: 100%;
+            padding: 14px 18px;
+            borderadius: 14px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            outline: none;
+        }
+
+        #search:focus {
+            border-color: #000;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 16px 20px;
+            borderadius: 14px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        .stat-card p {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 22px;
+        }
+
+        .card {
+            background: white;
+            borderadius: 18px;
+            overflow: hidden;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.06);
+            transition: 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+        }
+
+        .card img {
+            width: 100%;
+            aspectatio: 1/1;
+            object-fit: cover;
+            background: #eee;
+        }
+
+        .card-content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .design-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .sizes {
+            margin-bottom: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .size-badge {
+            background: #f0f0f0;
+            padding: 6px 10px;
+            borderadius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn {
+            margin-top: auto;
+            display: inline-block;
+            text-align: center;
+            background: #111;
+            color: white;
+            text-decoration: none;
+            padding: 12px;
+            borderadius: 12px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .not-found {
+            color: #d11a2a;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="header">
+            <h1>Physical Inventory</h1>
+            <p>Kumud Creations / Offline Inventory</p>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="search" placeholder="Search by design name..." />
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h3>Total Designs</h3>
+                <p id="designCount">0</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total Inventory Units</h3>
+                <p id="unitCount">0</p>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            Loading products...
+        </div>
+
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <script>
+
+        // const inventory = [
+        //   { design: "014NoPainNoGain", sizes: ["M"], qty: 1 },
+        //   { design: "016ChaiOClock", sizes: ["XL"], qty: 1 },
+        //   { design: "060SweatTodayShhineTomorrow", sizes: ["L", "XL"], qty: 2 },
+        //   { design: "069AllINeedisMoreWorkout", sizes: ["L", "M"], qty: 2 },
+        //   { design: "075WorkInProgress", sizes: ["XL"], qty: 2 },
+        //   { design: "081INDIADesigns", sizes: ["L", "M", "S", "XL", "XXL"], qty: 8 },
+        //   { design: "082INDIABHARATDesigns", sizes: ["L", "M", "S", "XL", "XXL"], qty: 21 },
+        //   { design: "083DadDaughterThePerfectChaosTeam", sizes: ["XL"], qty: 1 },
+        //   { design: "086MeAndMyDaughterDoEndlessTalks", sizes: ["M", "XL", "XXL"], qty: 4 },
+        //   { design: "097YoucantscaremeIhaveadaughter", sizes: ["XL"], qty: 1 },
+        //   { design: "105ThereisaGirlShecallsmeDaddy", sizes: ["L", "M", "S", "XL"], qty: 5 },
+        //   { design: "105ThereisaGirlShecallsmePapa", sizes: ["M", "S", "XL", "XXL"], qty: 9 },
+        //   { design: "110FriendsStyledCertifiedDoctor", sizes: ["XL", "XXL"], qty: 3 },
+        //   { design: "111FriendsStyledCertifiedDentist", sizes: ["3XL", "L", "S", "XXL"], qty: 5 },
+        //   { design: "116MyDaughterMyWorld", sizes: ["3XL", "L", "M", "S", "XL", "XXL"], qty: 7 },
+        //   { design: "139DancingismyTherapy", sizes: ["L", "M", "XL"], qty: 4 },
+        //   { design: "174BdayKingJan", sizes: ["3XL", "4XL", "L", "M", "XXL"], qty: 5 },
+        //   { design: "176BirthdayKingFebruary", sizes: ["M", "XL", "XXL"], qty: 5 },
+        //   { design: "177BirthdayQueenFebruary", sizes: ["3XL", "4XL", "M", "S", "XL", "XXL"], qty: 11 },
+        //   { design: "IPLKingKohli", sizes: ["7Yrs", "S", "XL"], qty: 3 },
+        //   { design: "IPLRohitMan", sizes: ["M", "XL", "XXL"], qty: 4 },
+        //   { design: "IPLThalaForeverFinisher", sizes: ["L", "M", "S", "XL", "XXL"], qty: 190 }
+        // ];
+
+        const inventory = [
+            { design: "003 Unlock Your Code Mastery", sizes: ["13Yrs"], qty: 1 },
+            { design: "006 Expressive Coding", sizes: ["M"], qty: 1 },
+            { design: "011PushYourLimit", sizes: ["XL"], qty: 1 },
+            { design: "014NoPainNoGain", sizes: ["M"], qty: 1 },
+            { design: "016ChaiOClock", sizes: ["XL"], qty: 1 },
+            {
+                design:
+                    "022Behindeverysuccessfulpersonisasubstantialamountofchai",
+                sizes: ["L"],
+                qty: 1
+            },
+            { design: "047RidetoliveLivetoride", sizes: ["S"], qty: 1 },
+            { design: "049RidetoliveLivetoride", sizes: ["M"], qty: 1 },
+
+            { design: "060SweatTodayShhineTomorrow", sizes: ["L", "XL"], qty: 2 },
+            { design: "069AllINeedisMoreWorkout", sizes: ["L", "M"], qty: 2 },
+            { design: "072Whennothinggoesrightgolift", sizes: ["XL"], qty: 1 },
+            { design: "075WorkInProgress", sizes: ["XL"], qty: 2 },
+
+            { design: "080 India Forever: National Pride", sizes: ["L", "M", "XL"], qty: 3 },
+            { design: "081 Proud to be an INDIAN", sizes: ["L", "M", "S", "XL", "XXL"], qty: 8 },
+            {
+                design: "081 Proud to be an INDIAN White",
+                sizes: ["XL"],
+                qty: 1
+            },
+
+            {
+                design: "082INDIABHARATDesigns",
+                sizes: ["L", "M", "S", "XL", "XXL"],
+                qty: 21
+            },
+            {
+                design: "082INDIABHARATDesignsForWhite",
+                sizes: ["M", "S", "XXL"],
+                qty: 7
+            },
+
+            {
+                design: "083DadDaughterThePerfectChaosTeam",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "086MeAndMyDaughterDoEndlessTalks",
+                sizes: ["M", "XL", "XXL"],
+                qty: 4
+            },
+            {
+                design: "087MeAndMyDadDoEndlessTalks",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "097YoucantscaremeIhaveadaughter",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "098DaddyDaughterHeartToHeartForBlack",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "099WhenGodMadeDaughtersHeGaveMeBest",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "100 I'm Proud Mother Of a Freaking Awesome Son White",
+                sizes: ["L"],
+                qty: 1
+            },
+            {
+                design: "101 I'm Proud Mother Of a Freaking Awesome Daughter White",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "102 I'm Proud Mother Of a Freaking Awesome Kids",
+                sizes: ["M"],
+                qty: 1
+            },
+
+            {
+                design: "105 There is a Girl - She calls me Daddy",
+                sizes: ["3XL", "4XL", "XL"],
+                qty: 3
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy White",
+                sizes: ["XL", "XXL"],
+                qty: 3
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy",
+                sizes: ["4XL", "L"],
+                qty: 2
+            },
+            {
+                design: "105 There is a Girl - She calls me Papa",
+                sizes: ["L", "M", "S", "XL", "XXL"],
+                qty: 10
+            },
+            {
+                design: "105 There is a Girl - She calls me Mumma1",
+                sizes: ["M", "XL"],
+                qty: 2
+            },
+            {
+                design: "105 There is a Girl - She calls me Mumma1",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "105 There is a Girl - She calls me Appa",
+                sizes: ["L", "XL", "XXL"],
+                qty: 3
+            },
+            {
+                design: "105 There is a Girl - She calls me Baba",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy",
+                sizes: ["4XL"],
+                qty: 2
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy - Vibrant",
+                sizes: ["L", "M", "S", "XL"],
+                qty: 5
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy White",
+                sizes: ["XXL"],
+                qty: 1
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "105ThereisaGirlShecallsmeMumma2",
+                sizes: ["4XL"],
+                qty: 1
+            },
+            {
+                design: "105 There is a Girl - She calls me Daddy",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "105ThereisaGirlShecallsmePapa",
+                sizes: ["M", "S", "XL", "XXL"],
+                qty: 9
+            },
+
+            {
+                design: "109FriendsStyledCertifiedMedicalAssistant",
+                sizes: ["L"],
+                qty: 1
+            },
+            {
+                design: "109FriendsStyledCertifiedMedicalAssistantForWhite",
+                sizes: ["L"],
+                qty: 1
+            },
+            {
+                design: "110FriendsStyledCertifiedDoctor",
+                sizes: ["XL", "XXL"],
+                qty: 3
+            },
+            {
+                design: "110FriendsStyledCertifiedDoctorForWhite",
+                sizes: ["L", "M", "S", "XXL"],
+                qty: 5
+            },
+            {
+                design: "111FriendsStyledCertifiedDentist",
+                sizes: ["3XL", "L", "S", "XXL"],
+                qty: 5
+            },
+            {
+                design: "111FriendsStyledCertifiedDentistForWhite",
+                sizes: ["L", "M"],
+                qty: 5
+            },
+            {
+                design: "112FriendsStyledCertifiedLawyer",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "113 Friends Styled - Certified Chartered Accountant",
+                sizes: ["L"],
+                qty: 1
+            },
+
+            {
+                design: "114ThereisaBoyHecallsmeDaddy",
+                sizes: ["5XL"],
+                qty: 1
+            },
+            {
+                design: "114ThereisaBoyHecallsmeDaddyForWhite",
+                sizes: ["L"],
+                qty: 1
+            },
+
+            {
+                design: "116MyDaughterMyWorld",
+                sizes: ["3XL", "L", "M", "S", "XL", "XXL"],
+                qty: 7
+            },
+            {
+                design: "117MySonMyWorld",
+                sizes: ["4XL"],
+                qty: 1
+            },
+            {
+                design: "120BirthdayMonthJan",
+                sizes: ["S", "XXL"],
+                qty: 2
+            },
+            {
+                design: "121BeingAwesome40",
+                sizes: ["3XL"],
+                qty: 1
+            },
+            {
+                design: "121BeingAwesome47",
+                sizes: ["XXL"],
+                qty: 2
+            },
+            {
+                design: "121BirthYear1975",
+                sizes: ["3XL", "5XL"],
+                qty: 2
+            },
+            {
+                design: "121BirthYear1975_1",
+                sizes: ["6XL"],
+                qty: 1
+            },
+
+            {
+                design: "122BeingFabulous42",
+                sizes: ["S"],
+                qty: 1
+            },
+            {
+                design: "122BeingFabulous44",
+                sizes: ["L"],
+                qty: 1
+            },
+            {
+                design: "122BeingFabulous45",
+                sizes: ["XXL"],
+                qty: 1
+            },
+            {
+                design: "122BeingFabulous46",
+                sizes: ["5XL"],
+                qty: 1
+            },
+            {
+                design: "122BeingFabulous49",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "122BirthYear1975",
+                sizes: ["3XL", "XXL"],
+                qty: 3
+            },
+
+            {
+                design: "124HappinessHusky",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "126 There is a Furry Boy - He is My Labrador",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "132ThereisaFurryBoyHeisGermanSheperd",
+                sizes: ["XL"],
+                qty: 1
+            },
+
+            {
+                design: "139DancingismyTherapy",
+                sizes: ["L", "M", "XL"],
+                qty: 4
+            },
+            {
+                design: "146ThereisaFurryBoyHeisCockerSpaniel",
+                sizes: ["XXL"],
+                qty: 1
+            },
+
+            {
+                design: "153 Capricorn Zodiac",
+                sizes: ["XL"],
+                qty: 1
+            },
+            {
+                design: "153 Leo Zodiac",
+                sizes: ["M"],
+                qty: 1
+            },
+
+            {
+                design: "174BdayKingJan",
+                sizes: ["3XL", "4XL", "L", "M", "XXL"],
+                qty: 5
+            },
+            {
+                design: "175BirthdayQueenJanuary",
+                sizes: ["4XL"],
+                qty: 1
+            },
+
+            {
+                design: "176BirthdayKingFebruary",
+                sizes: ["M", "XL", "XXL"],
+                qty: 5
+            },
+            {
+                design: "176BirthdayKingJanuary",
+                sizes: ["3XL", "L", "M", "S", "XXL"],
+                qty: 9
+            },
+            {
+                design: "176BirthdayKingMarch",
+                sizes: ["L"],
+                qty: 1
+            },
+
+            {
+                design: "177BirthdayQueenAugust",
+                sizes: ["S"],
+                qty: 1
+            },
+            {
+                design: "177BirthdayQueenMay",
+                sizes: ["3XL"],
+                qty: 1
+            },
+            {
+                design: "177BirthdayQueenOctober",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "177BirthdayQueenFebruary",
+                sizes: ["3XL", "4XL", "M", "S", "XL", "XXL"],
+                qty: 11
+            },
+            {
+                design: "177BirthdayQueenJanuary",
+                sizes: ["4XL", "L", "M", "S", "XL", "XXL"],
+                qty: 8
+            },
+            {
+                design: "177BirthdayQueenMarch",
+                sizes: ["3XL", "L", "M", "XL", "XXL"],
+                qty: 10
+            },
+
+            {
+                design: "178BDayKingFeb",
+                sizes: ["XXL"],
+                qty: 1
+            },
+            {
+                design: "179BDayQueenApr",
+                sizes: ["S"],
+                qty: 1
+            },
+            {
+                design: "179BDayQueenFeb",
+                sizes: ["M", "S"],
+                qty: 3
+            },
+            {
+                design: "179BDayQueenMar",
+                sizes: ["L"],
+                qty: 1
+            },
+            {
+                design: "179BDayQueenMay",
+                sizes: ["XXL"],
+                qty: 1
+            },
+
+            {
+                design: "IPLKingKohli",
+                sizes: ["7Yrs", "S", "XL"],
+                qty: 3
+            },
+            {
+                design: "IPLRohitMan",
+                sizes: ["M", "XL", "XXL"],
+                qty: 4
+            },
+            {
+                design: "IPLThalaForeverFinisher",
+                sizes: ["L", "M", "S", "XL", "XXL"],
+                qty: 190
+            },
+            {
+                design: "IPLThalaForeverFinisher-Back-7Dhoni",
+                sizes: ["M"],
+                qty: 1
+            },
+            {
+                design: "IPL - Thala For A Reason",
+                sizes: ["M", "XL"],
+                qty: 2
+            },            
+            {
+                design: "Patriotic Pulse: Indian Flag",
+                sizes: ["XL", "XXL"],
+                qty: 4
+            },            
+            {
+                design: "105 She calls me Daddy Vibrant",
+                sizes: ["XL"],
+                qty: 1
+            }
+        ];
+
+let products = [];
+
+// Image fallback mapping (design -> image URL)
+// Add entries here for designs that don't have images in Shopify
+// Format: "design-name": "https://example.com/image.jpg"
+const imageFallback = {
+  // Example: "003EatSleepC<:>deRepeat": "https://example.com/image.jpg"
+  "IPLRohitMan":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1715275513.png",
+  "179BDayQueenMay":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31831209/images/Front_1_c_2.jpg",
+"179BDayQueenMar":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31831204/images/Front_1_c_2.jpg",
+"179BDayQueenFeb":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31830368/images/Front_1_c_2.jpg",
+"179BDayQueenApr":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31831206/images/Front_1_c_2.jpg",
+"178BDayKingFeb":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31846212/images/Front_1_c_2.jpg",
+"174BdayKingJan":"https://qikink-assets.s3.ap-south-1.amazonaws.com/clients/172086/clientProducts/31744195/images/Front_1_c_2.jpg",
+"122BirthYear1975":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735576861.png",
+"122BeingFabulous49":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1736777741.png",
+"122BeingFabulous46":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1736777703.png",
+"122BeingFabulous45":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735915470.png",
+"122BeingFabulous44":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1736829189.png",
+"122BeingFabulous42":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1736829161.png",
+"121BirthYear1975_1":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735456134.png",
+"121BirthYear1975":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735378177.png",
+"121BeingAwesome47":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735913988.png",
+"121BeingAwesome40":"https://qikink-assets.s3.ap-south-1.amazonaws.com/qikink.com/erp2/assets/designs/thumbs/1735832128.png",
+};
+
+        function normalize(str) {
+            return str
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '');
+        }
+
+        function getImageUrl(designName, product) {
+            // 1. Try to get image from product data
+            if (product?.images?.[0]?.src) {
+                return product.images[0].src;
+            }
+            
+            // 2. Try to get image from fallback mapping
+            if (imageFallback[designName]) {
+                return imageFallback[designName];
+            }
+            
+            // 3. Fallback to placeholder
+            return 'https://via.placeholder.com/500x500?text=No+Image';
+        }
+
+        function beautifyName(name) {
+            return name
+                .replace(/^[0-9]+/, '')
+                .replace(/([A-Z])/g, ' $1')
+                .trim();
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('https://kumudcreations.in/products.json?limit=250');
+                const data = await response.json();
+                products = data.products || [];
+
+                document.getElementById('loading').style.display = 'none';
+
+                renderProducts();
+                updateStats();
+
+            } catch (error) {
+                console.error(error);
+
+                document.getElementById('loading').innerHTML = 'Unable to load Shopify products. Showing inventory only.';
+
+                renderProducts();
+                updateStats();
+            }
+        }
+
+        function findMatchingProduct(designName) {
+            const design = normalize(designName);
+
+            return products.find(product => {
+                const title = normalize(product.title);
+
+                return (
+                    title.includes(design) ||
+                    design.includes(title)
+                );
+            });
+        }
+
+        function renderProducts(searchTerm = '') {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            const filtered = inventory.filter(item =>
+                item.design.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            filtered.forEach(item => {
+
+                const product = findMatchingProduct(item.design);
+
+                const image = getImageUrl(item.design, product);
+                
+                // Determine if we should show product link or "not found" message
+                // Show "not found" message only if:
+                // 1. Product is not found in Shopify AND
+                // 2. No fallback image is provided for this design
+                const showProductLink = product !== null;
+                const showNotFoundMessage = !product && !imageFallback[item.design];
+
+                const productLink = product
+                    ? `https://kumudcreations.in/products/${product.handle}`
+                    : null;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                card.innerHTML = `
+          <img
+            src="${image}"
+            alt="${item.design}"
+            loading="lazy"
+            onerror="this.src='https://via.placeholder.com/500x500?text=No+Image'"
+          />
+
+          <div class="card-content">
+            <div class="design-name">
+              ${beautifyName(item.design)}
+            </div>
+
+            <div class="sizes">
+              ${item.sizes.map(size => `
+                <span class="size-badge">${size}</span>
+              `).join('')}
+            </div>
+
+            ${showProductLink
+                        ? `<a class="btn" href="${productLink}" target="_blank">View Product</a>`
+                        : showNotFoundMessage
+                            ? `<div class="not-found">Product not found on website</div>`
+                            : ``
+                    }
+          </div>
+        `;
+
+                grid.appendChild(card);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('designCount').innerText = inventory.length;
+
+            const totalUnits = inventory.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('unitCount').innerText = totalUnits;
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            renderProducts(e.target.value);
+        });
+
+        loadProducts();
+
+    </script>
+</body>
+
+</html>
