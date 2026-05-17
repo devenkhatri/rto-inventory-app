@@ -28,14 +28,14 @@
 
     <style>
         :root {
-            --primary: #1a1a1a;
-            --secondary: #2c3e50;
-            --accent: #3498db;
+            --primary: #004d4d;
+            --secondary: #006060;
+            --accent: #008080;
             --success: #27ae60;
             --warning: #f39c12;
             --danger: #e74c3c;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
+            --light: #e0f2f1;
+            --dark: #004d4d;
             --gray: #95a5a6;
             --gray-light: #bdc3c7;
             --gray-dark: #7f8c8d;
@@ -61,7 +61,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b3b3 0%, #008080 100%);
             min-height: 100vh;
             color: var(--dark);
             padding: 0;
@@ -77,8 +77,8 @@
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 10% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 20%);
+                radial-gradient(circle at 10% 20%, rgba(0, 179, 179, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 128, 128, 0.1) 0%, transparent 20%);
             pointer-events: none;
             z-index: -1;
         }
@@ -104,7 +104,7 @@
         .header h1 {
             font-size: 2.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b3b3 0%, #008080 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -178,7 +178,7 @@
             left: 0;
             width: 4px;
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b3b3 0%, #008080 100%);
         }
 
         .stat-card:hover {
@@ -239,7 +239,7 @@
             width: 100%;
             height: 220px;
             object-fit: cover;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
             transition: var(--transition-base);
         }
 
@@ -277,7 +277,7 @@
         }
 
         .size-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b3b3 0%, #008080 100%);
             color: white;
             padding: 0.375rem 0.875rem;
             border-radius: var(--radius-sm);
@@ -297,7 +297,7 @@
         .btn {
             display: inline-block;
             padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #00b3b3 0%, #008080 100%);
             color: white;
             text-decoration: none;
             border-radius: var(--radius-md);
@@ -315,7 +315,7 @@
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            background: linear-gradient(135deg, #009999 0%, #006666 100%);
         }
 
         .btn:active {
@@ -499,6 +499,86 @@
                 margin-bottom: 1rem !important;
             }
         }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            color: var(--gray-dark);
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+        
+        .close-modal:hover {
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .modal-title {
+            margin: 0;
+            font-size: 1.75rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Card Actions */
+        .card-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: auto;
+            padding-top: 1rem;
+        }
+        
+        .card-actions .btn {
+            flex: 1;
+            font-size: 0.875rem;
+            padding: 0.75rem;
+        }
     </style>
 </head>
 
@@ -506,8 +586,8 @@
     <div class="container">
 
         <div class="header">
-            <h1>Physical Inventory</h1>
-            <p>Kumud Creations / Offline Inventory</p>
+            <h1>Kumud Creations</h1>
+            <p>Physical / Offline Inventory</p>
         </div>
 
         <div class="search-bar">
@@ -1134,12 +1214,15 @@ const imageFallback = {
               `).join('')}
             </div>
 
-            ${showProductLink
-                        ? `<a class="btn" href="${productLink}" target="_blank">View Product</a>`
-                        : showNotFoundMessage
-                            ? `<div class="not-found">Product not found on website</div>`
-                            : ``
-                    }
+            <div class="card-actions">
+              ${productLink
+                ? `<button class="btn product-btn" data-product-link="${productLink}" data-product-name="${item.design}">View Product</button>`
+                : showNotFoundMessage
+                    ? `<div class="not-found">Product not found on website</div>`
+                    : ``
+              }
+              <button class="btn size-chart-btn">Size Chart</button>
+            </div>
           </div>
         `;
 
@@ -1158,8 +1241,103 @@ const imageFallback = {
             renderProducts(e.target.value);
         });
 
-        loadProducts();
+        // Modal elements
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <div class="modal-header">
+                    <h2 class="modal-title"></h2>
+                </div>
+                <div class="modal-body">
+                    <img class="modal-image" src="" alt="" />
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
 
+        // Size chart modal elements
+        const sizeChartModal = document.createElement('div');
+        sizeChartModal.className = 'modal size-chart-modal';
+        sizeChartModal.innerHTML = `
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <div class="modal-header">
+                    <h2 class="modal-title">Size Chart</h2>
+                </div>
+                <div class="modal-body">
+                    <img class="modal-image" src="https://cdn.shopify.com/s/files/1/0685/8191/6896/files/KC-UnisexClassicT-ShirtSizeChart_480x480.png?v=1726633296" alt="Size Chart" />
+                </div>
+            </div>
+        `;
+        document.body.appendChild(sizeChartModal);
+
+        // Modal JavaScript
+        // Get modal elements
+        const productModal = document.querySelector('.modal');
+        const sizeChartModalEl = document.querySelector('.modal.size-chart-modal');
+        const modalImage = productModal.querySelector('.modal-image');
+        const modalTitle = productModal.querySelector('.modal-title');
+        const closeButtons = document.querySelectorAll('.close-modal');
+
+        // Add event listener to document to handle clicks on product buttons and size chart buttons
+        document.addEventListener('click', function(e) {
+            // Handle product button clicks
+            if (e.target.classList.contains('product-btn')) {
+                e.preventDefault();
+                const productLink = e.target.getAttribute('data-product-link');
+                const productName = e.target.getAttribute('data-product-name');
+                
+                // Fetch product data to get images
+                fetch(productLink + '.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        const images = data.product.images;
+                        if (images && images.length > 0) {
+                            modalImage.src = images[0].src;
+                            modalTitle.textContent = productName;
+                            productModal.style.display = 'block';
+                        } else {
+                            // Fallback if no images
+                            modalImage.src = 'https://via.placeholder.com/800x800?text=No+Image+Available';
+                            modalTitle.textContent = productName;
+                            productModal.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching product:', error);
+                        modalImage.src = 'https://via.placeholder.com/800x800?text=Image+Not+Available';
+                        modalTitle.textContent = productName;
+                        productModal.style.display = 'block';
+                    });
+            }
+            
+            // Handle size chart button clicks
+            if (e.target.classList.contains('size-chart-btn')) {
+                sizeChartModalEl.style.display = 'block';
+            }
+        });
+
+        // Close modals when clicking the close button
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                productModal.style.display = 'none';
+                sizeChartModalEl.style.display = 'none';
+            });
+        });
+
+        // Close modals when clicking outside of modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === productModal) {
+                productModal.style.display = 'none';
+            }
+            if (event.target === sizeChartModalEl) {
+                sizeChartModalEl.style.display = 'none';
+            }
+        });
+
+        loadProducts();
     </script>
 </body>
 
